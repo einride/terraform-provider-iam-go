@@ -7,7 +7,6 @@ import (
 	"google.golang.org/genproto/googleapis/iam/v1"
 )
 
-// Provider -
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
