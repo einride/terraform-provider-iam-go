@@ -1,12 +1,16 @@
 # Terraform Provider iam-go
 
-Run the following command to build the provider
+A provider for https://github.com/einride/iam-go
 
-```shell
-go build -o terraform-provider-iam-go
-```
+## Requirements
+-	[Terraform](https://www.terraform.io/downloads.html) >= 0.13.x
+-	[Go](https://golang.org/doc/install) >= 1.17
 
-## Test sample configuration
+## Using the provider
+
+TODO: add link to terraform registry
+
+## Building and testing the provider
 
 First, build and install the provider.
 
@@ -14,8 +18,8 @@ First, build and install the provider.
 make install
 ```
 
-Then, run the following command to initialize the workspace and apply the sample configuration.
+Then, run the follwing command in the workspace you want to test it.
 
 ```shell
-terraform init && terraform apply
+rm .terraform.lock.hc && terraform init
 ```
