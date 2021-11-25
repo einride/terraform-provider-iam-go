@@ -1,16 +1,11 @@
 package main
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
+	iamgo "terraform-provider-iam-go/iam-go"
 
-	"terraform-provider-iam-go/iam-go"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 )
 
 func main() {
-	plugin.Serve(&plugin.ServeOpts{
-		ProviderFunc: func() *schema.Provider {
-			return iam_go.Provider()
-		},
-	})
+	plugin.Serve(&plugin.ServeOpts{ProviderFunc: iamgo.Provider})
 }

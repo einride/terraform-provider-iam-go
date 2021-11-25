@@ -1,4 +1,4 @@
-package iam_go
+package iamgo
 
 import (
 	"sync"

@@ -1,3 +1,5 @@
-**/.terraform/*
 .idea
-.terraform.lock.hcl
+.vscode
+.DS_Store
+node_modules/
+tools/*/*/

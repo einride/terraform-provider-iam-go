@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 HOSTNAME=hashicorp.com
 NAMESPACE=einride
 PKG_NAME=iam-go
@@ -5,40 +7,37 @@ BINARY=terraform-provider-${PKG_NAME}
 VERSION=0.1
 OS_ARCH=linux_amd64
 
-default: install
+.PHONY: all
+all: \
+	go-lint \
+	go-test \
+	go-mod-tidy \
+	git-verify-nodiff
 
+include tools/git-verify-nodiff/rules.mk
+include tools/golangci-lint/rules.mk
+include tools/semantic-release/rules.mk
+
+.PHONY: go-mod-tidy
+go-mod-tidy:
+	$(info [$@] tidying Go module files...)
+	@go mod tidy
+
+.PHONY: go-test
+go-test:
+	$(info [$@] running Go test suites...)
+	go test -count=1 -race ./...
+
+.PHONY: go-lint
+go-lint: $(golangci_lint)
+	$(info [$@] linting Go code...)
+	@$(golangci_lint) run ./${PKG_NAME}
+
+.PHONY: build
 build:
 	go build -o ${BINARY}
 
-release:
-	GOOS=darwin GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_darwin_amd64
-	GOOS=freebsd GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_freebsd_386
-	GOOS=freebsd GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_freebsd_amd64
-	GOOS=freebsd GOARCH=arm go build -o ./bin/${BINARY}_${VERSION}_freebsd_arm
-	GOOS=linux GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_linux_386
-	GOOS=linux GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_linux_amd64
-	GOOS=linux GOARCH=arm go build -o ./bin/${BINARY}_${VERSION}_linux_arm
-	GOOS=openbsd GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_openbsd_386
-	GOOS=openbsd GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_openbsd_amd64
-	GOOS=solaris GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_solaris_amd64
-	GOOS=windows GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_windows_386
-	GOOS=windows GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_windows_amd64
-
-install: build
-	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
-	mv ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
-
-test:
-	go test ./... -v
-
-lint:
-	@golangci-lint run ./$(PKG_NAME)
-
-tools:
-	go get github.com/golangci/golangci-lint/cmd/golangci-lint
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint
-
-
-docs:
-	go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
-	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+.PHONY: local-install
+local-install: build
+	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${PKG_NAME}/${VERSION}/${OS_ARCH}
+	mv ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${PKG_NAME}/${VERSION}/${OS_ARCH}
