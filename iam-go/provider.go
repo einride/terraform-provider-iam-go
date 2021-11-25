@@ -2,9 +2,11 @@ package iam_go
 
 import (
 	"context"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"google.golang.org/genproto/googleapis/iam/v1"
+	"google.golang.org/grpc"
 )
 
 func Provider() *schema.Provider {
@@ -28,24 +30,21 @@ func Provider() *schema.Provider {
 	}
 }
 
-func setupConnection(ctx context.Context, address string, token string) (iam.IAMPolicyClient, error) {
+func setupConnection(ctx context.Context, address string, token string) (*grpc.ClientConn, error) {
 	connection, err := Connect(ctx, address, token)
 	if err != nil {
 		return nil, err
 	}
-	return iam.NewIAMPolicyClient(connection), nil
+	return connection, nil
 }
 
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	address := d.Get("address").(string)
-	token := d.Get("token").(string)
-
-	client, err := setupConnection(ctx, address, token)
+	client, err := setupConnection(ctx, d.Get("address").(string), d.Get("token").(string))
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
 
-	return newPolicyUpdate(client), diags
+	return newPolicyUpdate(iam.NewIAMPolicyClient(client)), diags
 }

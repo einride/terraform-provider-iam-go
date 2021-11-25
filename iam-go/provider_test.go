@@ -2,22 +2,24 @@ package iam_go
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"google.golang.org/genproto/googleapis/iam/v1"
-	"google.golang.org/grpc"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"google.golang.org/genproto/googleapis/iam/v1"
+	"google.golang.org/grpc"
 )
 
-type providerFactories map[string]func() (*schema.Provider, error)
-type provider func() (*schema.Provider, error)
+type (
+	providerFactories map[string]func() (*schema.Provider, error)
+	provider          func() (*schema.Provider, error)
+)
 
 // providers are used to instantiate a provider during acceptance testing.
 // The factory function will be invoked for every Terraform CLI command executed
 // to create a provider server to which the CLI can reattach.
 func providers(client *mockIamService) providerFactories {
-	var p = providerFactories{}
+	p := providerFactories{}
 	p["iam-go"] = testIAMGoProvider(client)
 	return p
 }
@@ -59,18 +61,30 @@ type mockIamService struct {
 	policies map[string]*iam.Policy
 }
 
-func (m mockIamService) SetIamPolicy(ctx context.Context, req *iam.SetIamPolicyRequest, opts ...grpc.CallOption) (*iam.Policy, error) {
+func (m mockIamService) SetIamPolicy(
+	ctx context.Context,
+	req *iam.SetIamPolicyRequest,
+	opts ...grpc.CallOption,
+) (*iam.Policy, error) {
 	m.policies[req.GetResource()] = req.Policy
 	return req.Policy, nil
 }
 
-func (m mockIamService) GetIamPolicy(ctx context.Context, req *iam.GetIamPolicyRequest, opts ...grpc.CallOption) (*iam.Policy, error) {
+func (m mockIamService) GetIamPolicy(
+	ctx context.Context,
+	req *iam.GetIamPolicyRequest,
+	opts ...grpc.CallOption,
+) (*iam.Policy, error) {
 	if val, ok := m.policies[req.GetResource()]; ok {
 		return val, nil
 	}
 	return &iam.Policy{}, nil
 }
 
-func (m mockIamService) TestIamPermissions(ctx context.Context, req *iam.TestIamPermissionsRequest, opts ...grpc.CallOption) (*iam.TestIamPermissionsResponse, error) {
+func (m mockIamService) TestIamPermissions(
+	ctx context.Context,
+	req *iam.TestIamPermissionsRequest,
+	opts ...grpc.CallOption,
+) (*iam.TestIamPermissionsResponse, error) {
 	panic("implement me")
 }

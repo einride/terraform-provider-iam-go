@@ -14,7 +14,7 @@ import (
 )
 
 func resourceMember() *schema.Resource {
-	noWhiteSpaceValidation := validation.StringDoesNotMatch(regexp.MustCompile(".*\\s.*"), "contains whitespace")
+	noWhiteSpaceValidation := validation.StringDoesNotMatch(regexp.MustCompile(`.*\s.*`), "contains whitespace")
 	return &schema.Resource{
 		CreateContext: resourceMemberCreate,
 		ReadContext:   resourceMemberRead,
@@ -45,9 +45,106 @@ func resourceMember() *schema.Resource {
 	}
 }
 
-func getResourceIAMMember(d *schema.ResourceData) *iamMember {
-	if d.Id() != "" {
-		fields := strings.Fields(d.Id())
+type iamMember struct {
+	resource string
+	role     string
+	member   string
+}
+
+func resourceMemberCreate(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	IAMMember := getResourceIAMMember(data)
+
+	ePolicy, ok := meta.(*policyUpdate)
+	if !ok {
+		return diag.Errorf("meta interface did not provide policyUpdate")
+	}
+	unlock := ePolicy.lock(resourceName(IAMMember.resource))
+	defer unlock()
+
+	policy, err := getIamPolicy(ctx, ePolicy.client, IAMMember.resource)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	iampolicy.AddBinding(policy, IAMMember.role, IAMMember.member)
+
+	_, err = setIamPolicy(ctx, ePolicy.client, IAMMember.resource, policy)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	data.SetId(fmt.Sprintf("%s %s %s", IAMMember.resource, IAMMember.role, IAMMember.member))
+
+	resourceMemberRead(ctx, data, meta)
+
+	return diags
+}
+
+func resourceMemberRead(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	IAMMember := getResourceIAMMember(data)
+
+	ePolicy, ok := meta.(*policyUpdate)
+	if !ok {
+		return diag.Errorf("meta interface did not provide policyUpdate")
+	}
+
+	policy, err := getIamPolicy(ctx, ePolicy.client, IAMMember.resource)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if !contains(IAMMember, policy) {
+		data.SetId("")
+		return diags
+	}
+
+	if err := data.Set("member", IAMMember.member); err != nil {
+		return diag.Errorf("error setting member: %s", err)
+	}
+	if err := data.Set("role", IAMMember.role); err != nil {
+		return diag.Errorf("error setting role: %s", err)
+	}
+	if err := data.Set("resource", IAMMember.resource); err != nil {
+		return diag.Errorf("error setting resource: %s", err)
+	}
+	return diags
+}
+
+func resourceMemberDelete(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	IAMMember := getResourceIAMMember(data)
+
+	ePolicy, ok := meta.(*policyUpdate)
+	if !ok {
+		return diag.Errorf("meta interface did not provide policyUpdate")
+	}
+	unlock := ePolicy.lock(resourceName(IAMMember.resource))
+	defer unlock()
+
+	policy, err := getIamPolicy(ctx, ePolicy.client, IAMMember.resource)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	iampolicy.RemoveBinding(policy, IAMMember.role, IAMMember.member)
+
+	_, err = setIamPolicy(ctx, ePolicy.client, IAMMember.resource, policy)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	data.SetId("")
+
+	return diags
+}
+
+func getResourceIAMMember(data *schema.ResourceData) *iamMember {
+	if data.Id() != "" {
+		fields := strings.Fields(data.Id())
 		return &iamMember{
 			resource: fields[0],
 			role:     fields[1],
@@ -56,116 +153,54 @@ func getResourceIAMMember(d *schema.ResourceData) *iamMember {
 	}
 
 	return &iamMember{
-		resource: d.Get("resource").(string),
-		role:     d.Get("role").(string),
-		member:   d.Get("member").(string),
+		resource: data.Get("resource").(string),
+		role:     data.Get("role").(string),
+		member:   data.Get("member").(string),
 	}
 }
 
-type iamMember struct {
-	resource string
-	role     string
-	member   string
+func setIamPolicy(
+	ctx context.Context,
+	client iam.IAMPolicyClient,
+	resource string,
+	policy *iam.Policy,
+) (*iam.Policy, error) {
+	return client.SetIamPolicy(
+		ctx,
+		&iam.SetIamPolicyRequest{
+			Resource: resource,
+			Policy:   policy,
+		},
+	)
 }
 
-func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	IAMMember := getResourceIAMMember(d)
-
-	p := m.(*policyUpdate)
-	unlock := p.lock(resourceName(IAMMember.resource))
-	defer unlock()
-
-	policy, err := p.client.GetIamPolicy(ctx, &iam.GetIamPolicyRequest{Resource: IAMMember.resource, Options: nil})
-
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	iampolicy.AddBinding(policy, IAMMember.role, IAMMember.member)
-
-	_, err = p.client.SetIamPolicy(ctx, &iam.SetIamPolicyRequest{Resource: IAMMember.resource, Policy: policy})
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	d.SetId(fmt.Sprintf("%s %s %s", IAMMember.resource, IAMMember.role, IAMMember.member))
-
-	resourceMemberRead(ctx, d, m)
-
-	return diags
+func getIamPolicy(ctx context.Context, client iam.IAMPolicyClient, resource string) (*iam.Policy, error) {
+	return client.GetIamPolicy(
+		ctx,
+		&iam.GetIamPolicyRequest{
+			Resource: resource,
+			Options:  nil,
+		},
+	)
 }
 
-func resourceMemberRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	IAMMember := getResourceIAMMember(d)
-
-	p := m.(*policyUpdate)
-	policy, err := p.client.GetIamPolicy(ctx, &iam.GetIamPolicyRequest{Resource: IAMMember.resource, Options: nil})
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
+func contains(iamMember *iamMember, policy *iam.Policy) bool {
 	var binding *iam.Binding
 	for _, b := range policy.Bindings {
-		if b.Role == IAMMember.role {
+		if b.Role == iamMember.role {
 			binding = b
 			break
 		}
 	}
 
 	if binding == nil {
-		d.SetId("")
-		return diags
+		return false
 	}
 
-	var member string
 	for _, mem := range binding.Members {
-		if mem == IAMMember.member {
-			member = mem
+		if mem == iamMember.member {
+			return true
 		}
 	}
-
-	if member == "" {
-		d.SetId("")
-		return diags
-	}
-
-	if err := d.Set("member", member); err != nil {
-		return diag.Errorf("error setting member: %s", err)
-	}
-	if err := d.Set("role", binding.Role); err != nil {
-		return diag.Errorf("error setting role: %s", err)
-	}
-	if err := d.Set("resource", IAMMember.resource); err != nil {
-		return diag.Errorf("error setting resource: %s", err)
-	}
-	return diags
-}
-
-func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	IAMMember := getResourceIAMMember(d)
-
-	p := m.(*policyUpdate)
-	unlock := p.lock(resourceName(IAMMember.resource))
-	defer unlock()
-
-	policy, err := p.client.GetIamPolicy(ctx, &iam.GetIamPolicyRequest{Resource: IAMMember.resource, Options: nil})
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	iampolicy.RemoveBinding(policy, IAMMember.role, IAMMember.member)
-
-	_, err = p.client.SetIamPolicy(ctx, &iam.SetIamPolicyRequest{Resource: IAMMember.resource, Policy: policy})
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	d.SetId("")
-
-	return diags
+	return false
 }

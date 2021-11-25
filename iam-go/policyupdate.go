@@ -1,8 +1,9 @@
 package iam_go
 
 import (
-	"google.golang.org/genproto/googleapis/iam/v1"
 	"sync"
+
+	"google.golang.org/genproto/googleapis/iam/v1"
 )
 
 type resourceName string
@@ -23,12 +24,12 @@ func newPolicyUpdate(client iam.IAMPolicyClient) *policyUpdate {
 
 func (s *policyUpdate) lock(resource resourceName) func() {
 	s.mutex.Lock()
-	l, ok := s.resources[resource]
+	mutex, ok := s.resources[resource]
 	if !ok {
-		l = &sync.Mutex{}
-		s.resources[resource] = l
+		mutex = &sync.Mutex{}
+		s.resources[resource] = mutex
 	}
 	s.mutex.Unlock()
-	l.Lock()
-	return l.Unlock
+	mutex.Lock()
+	return mutex.Unlock
 }

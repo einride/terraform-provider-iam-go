@@ -1,7 +1,7 @@
 HOSTNAME=hashicorp.com
 NAMESPACE=einride
-NAME=iam-go
-BINARY=terraform-provider-${NAME}
+PKG_NAME=iam-go
+BINARY=terraform-provider-${PKG_NAME}
 VERSION=0.1
 OS_ARCH=linux_amd64
 
@@ -28,6 +28,17 @@ install: build
 	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 	mv ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 
-.PHONY: test
 test:
 	go test ./... -v
+
+lint:
+	@golangci-lint run ./$(PKG_NAME)
+
+tools:
+	go get github.com/golangci/golangci-lint/cmd/golangci-lint
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint
+
+
+docs:
+	go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs

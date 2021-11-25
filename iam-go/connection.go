@@ -53,7 +53,7 @@ func (t tokenCredentials) GetRequestMetadata(ctx context.Context, uri ...string)
 	}, nil
 }
 
-func (p tokenCredentials) RequireTransportSecurity() bool {
+func (t tokenCredentials) RequireTransportSecurity() bool {
 	return false
 }
 
