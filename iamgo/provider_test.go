@@ -10,19 +10,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-type (
-	providerFactories map[string]func() (*schema.Provider, error)
-	provider          func() (*schema.Provider, error)
-)
-
-// providers are used to instantiate a provider during acceptance testing.
-// The factory function will be invoked for every Terraform CLI command executed
-// to create a provider server to which the CLI can reattach.
-func providers(client *mockIamService) providerFactories {
-	p := providerFactories{}
-	p["iam-go"] = testIAMGoProvider(client)
-	return p
-}
+type provider func() (*schema.Provider, error)
 
 func testIAMGoProvider(client *mockIamService) provider {
 	return func() (*schema.Provider, error) {
