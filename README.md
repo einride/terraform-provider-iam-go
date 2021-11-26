@@ -1,6 +1,6 @@
-# Terraform Provider iam-go
+# Terraform Provider IAM Go
 
-A provider for https://github.com/einride/iam-go
+A terraform provider for https://github.com/einride/iam-go
 
 ## Requirements
 -	[Terraform](https://www.terraform.io/downloads.html) >= 0.13.x

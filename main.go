@@ -1,8 +1,7 @@
 package main
 
 import (
-	iamgo "terraform-provider-iam-go/iam-go"
-
+	"github.com/einride/terraform-provider-iam-go/iamgo"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 )
 

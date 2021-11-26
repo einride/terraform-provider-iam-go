@@ -2,8 +2,9 @@ SHELL := /bin/bash
 
 HOSTNAME=hashicorp.com
 NAMESPACE=einride
-PKG_NAME=iam-go
-BINARY=terraform-provider-${PKG_NAME}
+PKG_NAME=iamgo
+NAME=iam-go
+BINARY=terraform-provider-${NAME}
 VERSION=0.1
 OS_ARCH=linux_amd64
 
@@ -39,5 +40,5 @@ build:
 
 .PHONY: local-install
 local-install: build
-	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${PKG_NAME}/${VERSION}/${OS_ARCH}
-	mv ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${PKG_NAME}/${VERSION}/${OS_ARCH}
+	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
+	mv ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}

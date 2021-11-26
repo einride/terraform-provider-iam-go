@@ -1,4 +1,4 @@
-module terraform-provider-iam-go
+module github.com/einride/terraform-provider-iam-go
 
 go 1.17
 
