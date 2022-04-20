@@ -8,7 +8,7 @@ A terraform provider for https://github.com/einride/iam-go
 
 ## Using the provider
 
-TODO: add link to terraform registry
+https://registry.terraform.io/providers/einride/iam-go
 
 ## Building and testing the provider
 
