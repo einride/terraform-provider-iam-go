@@ -15,7 +15,7 @@ https://registry.terraform.io/providers/einride/iam-go
 First, build and install the provider.
 
 ```shell
-make install
+make local-install
 ```
 
 Then, run the follwing command in the workspace you want to test it.
