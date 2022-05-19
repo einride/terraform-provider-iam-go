@@ -22,6 +22,11 @@ func Provider() *schema.Provider {
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("IAM_GO_TOKEN", nil),
 			},
+			"insecure": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("IAM_GO_INSECURE", false),
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"iam-go_member": resourceMember(),
@@ -30,8 +35,8 @@ func Provider() *schema.Provider {
 	}
 }
 
-func setupConnection(ctx context.Context, address string, token string) (*grpc.ClientConn, error) {
-	connection, err := Connect(ctx, address, token)
+func setupConnection(ctx context.Context, address, token string, insecure bool) (*grpc.ClientConn, error) {
+	connection, err := Connect(ctx, address, token, insecure)
 	if err != nil {
 		return nil, err
 	}
@@ -40,8 +45,7 @@ func setupConnection(ctx context.Context, address string, token string) (*grpc.C
 
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	var diags diag.Diagnostics
-
-	client, err := setupConnection(ctx, d.Get("address").(string), d.Get("token").(string))
+	client, err := setupConnection(ctx, d.Get("address").(string), d.Get("token").(string), d.Get("insecure").(bool))
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}

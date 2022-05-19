@@ -18,6 +18,15 @@ First, build and install the provider.
 make local-install
 ```
 
+Then, update the provider settings to reflect the local binary.
+
+```terraform
+iam-go = {
+  source  = "hashicorp.com/einride/iam-go"
+  version = "0.1.0"
+}
+```
+
 Then, run the follwing command in the workspace you want to test it.
 
 ```shell

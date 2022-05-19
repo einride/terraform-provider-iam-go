@@ -9,24 +9,31 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	grpcinsecure "google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
 
-func Connect(ctx context.Context, address string, token string) (*grpc.ClientConn, error) {
+func Connect(ctx context.Context, address, token string, insecure bool) (*grpc.ClientConn, error) {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithUnaryInterceptor(unaryClientInterceptor))
 	opts = append(opts, grpc.WithPerRPCCredentials(tokenCredentials(token)))
 
 	const tlsPort = 443
 	address = withDefaultPort(address, tlsPort)
-
-	systemCertPool, err := x509.SystemCertPool()
-	if err != nil {
-		return nil, err
+	if insecure {
+		if !strings.HasPrefix(address, "localhost:") {
+			return nil, fmt.Errorf("can only use insecure when connecting to localhost")
+		}
+		opts = append(opts, grpc.WithTransportCredentials(grpcinsecure.NewCredentials()))
+	} else {
+		systemCertPool, err := x509.SystemCertPool()
+		if err != nil {
+			return nil, err
+		}
+		opts = append(opts, grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(systemCertPool, "")))
 	}
-	opts = append(opts, grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(systemCertPool, "")))
 
 	return grpc.DialContext(ctx, address, opts...)
 }

@@ -4,8 +4,8 @@ HOSTNAME=hashicorp.com
 NAMESPACE=einride
 PKG_NAME=iamgo
 NAME=iam-go
-BINARY=terraform-provider-${NAME}
-VERSION=0.1
+VERSION=0.1.0
+BINARY=terraform-provider-${NAME}_v${VERSION}
 OS_ARCH=linux_amd64
 
 .PHONY: all
