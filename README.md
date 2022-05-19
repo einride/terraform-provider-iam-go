@@ -1,16 +1,21 @@
-# Terraform Provider IAM Go
+Terraform Provider IAM Go
+=========================
 
 A terraform provider for https://github.com/einride/iam-go
 
-## Requirements
+Requirements
+------------
+
 -	[Terraform](https://www.terraform.io/downloads.html) >= 0.13.x
 -	[Go](https://golang.org/doc/install) >= 1.17
 
-## Using the provider
+Using the provider
+------------------
 
 https://registry.terraform.io/providers/einride/iam-go
 
-## Building and testing the provider
+Building and testing the provider
+---------------------------------
 
 First, build and install the provider.
 

@@ -15,9 +15,11 @@ import (
 func TestIAMGoMemberResource(t *testing.T) {
 	// We initiate the provider here in order to pass it to the CheckDestroy case
 	testProvider, err := testIAMGoProvider(newMockClient())()
-	factories := map[string]func() (*schema.Provider, error){"iam-go": func() (*schema.Provider, error) {
-		return testProvider, err
-	}}
+	factories := map[string]func() (*schema.Provider, error){
+		"iam-go": func() (*schema.Provider, error) {
+			return testProvider, err
+		},
+	}
 	resource.UnitTest(t, resource.TestCase{
 		ProviderFactories: factories,
 		CheckDestroy:      verifyResourceDestroy(testProvider),
