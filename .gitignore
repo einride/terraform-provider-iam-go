@@ -1,5 +1,5 @@
 .idea
 .vscode
 .DS_Store
-node_modules/
-tools/*/*/
+.semrel
+.generated-go-semantic-release-changelog.md

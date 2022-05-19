@@ -41,7 +41,8 @@ func Connect(ctx context.Context, address, token string, insecure bool) (*grpc.C
 func unaryClientInterceptor(
 	ctx context.Context,
 	method string,
-	req, reply interface{},
+	req interface{},
+	reply interface{},
 	cc *grpc.ClientConn,
 	invoker grpc.UnaryInvoker,
 	opts ...grpc.CallOption,
